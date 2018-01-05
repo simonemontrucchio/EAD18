@@ -1,4 +1,4 @@
-function [pezzi] = pezziEstranei(frame_campioni, MaxIndex, frame_estranei_secondi, fs_audio, segnaleVideo, segnaleAudioTagliato, pezzi)
+function [segnaleAudioSenzaPezziEstranei] = allineamentoSenzaPezziEstranei(frame_campioni, MaxIndex, frame_estranei_secondi, fs_audio, segnaleVideo, segnaleAudioTagliato, segnaleAudioSenzaPezziEstranei)
 
 %inizio finestra frame_estranei_secondi prima del blocco problematico
 in = frame_campioni * (MaxIndex-2) - frame_estranei_secondi * fs_audio;
@@ -23,32 +23,22 @@ for  i=in:passo:out
 
     [Max, MaxIndex] = max(CrossCorrFrame); %trovo il massimo e il rispettivo indice
     campioniRitardo = delayFrame(MaxIndex);
-  
+    
     
     ritardi_finestra(1, pos+1) = campioniRitardo;
     differenze_finestra(1, pos+1) = ritardi_finestra(1,pos) - campioniRitardo;
+    
+    %allineo il frame corrente
+    if (campioniRitardo>=0)
+        segnaleAudioSenzaPezziEstranei(i:i+passo) = segnaleAudioTagliato(i+campioniRitardo:i+passo+campioniRitardo);
+    end
+    if (campioniRitardo<0)
+        segnaleAudioSenzaPezziEstranei(i:i+passo) = segnaleAudioTagliato(i-campioniRitardo:i+passo-campioniRitardo);
+    end 
     
     pos = pos + 1;
 end
 
 
-%Plot di tutti i disallineamenti causati dalla deriva e dai silenzi nella
-%finestra
-figure
-plot(1:length(ritardi_finestra), ritardi_finestra);
-title('Deriva dei frame nel blocco selezionato')
- 
-% %Plot delle differenze nei disallineamenti successivi  per trovare i pezzi estranei nella
-%finestra
-figure
-plot(1:length(differenze_finestra), differenze_finestra);
-title('Frame con pezzi estranei nel blocco selezionato')
-
-[MaxF, MaxIndexF] = max(differenze_finestra); % trovo il frame in cui è stato inserito il "pezzo estraneo"
-
-Sp = size(pezzi);
-pezzi(1,Sp(1,2)+1) = in + passo * (MaxIndexF - 2);  %inizio frame con pezzo estraneo
-pezzi(2,Sp(1,2)+1) = in + passo * (MaxIndexF - 1);  %fine frame con pezzo estraneo
-pezzi(3,Sp(1,2)+1) = MaxF;                          %durata (in campioni) presunta del pezzo estraneo
 
 end

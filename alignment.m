@@ -2,21 +2,30 @@ clear all; close all;
 
 %% 0. APERTURA DEI FILE AUDIO
 
-[segnaleAudio, fs_audio] =audioread('audioWav.wav');  % apertura file audio ESTERNO
-%sprintf('fs segnale audio ESTERNO: %d', fs_audio)
-sAudio_length = length(segnaleAudio);      % da il numero di campioni
-%sprintf('Lunghezza segnale audio ESTERNO: %d', sAudio_length)
+esempi = 2;     %mettere su 1 per usare i file di esempio forniti dal professore, su 2 per usare i file di esempio da noi generati
 
-[segnaleVideo, fs_video] = audioread('video.wav');    % apertura file audio INTERNO
-%sprintf('fs segnale audio INTERNO: %d', fs_video)
-sVideo_length = length(segnaleVideo);      % da il numero di campioni
-%sprintf('Lunghezza segnale audio INTERNO: %d', sVideo_length)
+if (esempi == 1)
+    [segnaleAudio, fs_audio] =audioread('audioEsterno.wav');  % apertura file audio ESTERNO
+    sAudio_length = length(segnaleAudio);      % da il numero di campioni
+
+    [segnaleVideo, fs_video] = audioread('audioInterno.wav');    % apertura file audio INTERNO
+    sVideo_length = length(segnaleVideo);      % da il numero di campioni
+end
+
+if (esempi == 2)
+    [segnaleAudio, fs_audio] =audioread('audioEsterno48s.wav');  % apertura file audio ESTERNO
+    sAudio_length = length(segnaleAudio);      % da il numero di campioni
+
+    [segnaleVideo, fs_video] = audioread('audioInterno44.wav');    % apertura file audio INTERNO
+    sVideo_length = length(segnaleVideo);      % da il numero di campioni
+end
+
 
 %eventuale pareggiamento frequenze dei due segnali
 if (fs_video ~= fs_audio)
     [p,q] = rat(fs_audio / fs_video);
     segnaleVideo = resample(segnaleVideo, p, q);
-    sprintf('Attenzione: il segnale video era a frequenza %d Hz ed è stato portato alla stessa frequenza del segnale audio (%d Hz).', fs_video, fs_audio)
+    sprintf('Attenzione: il segnale audio interno era a frequenza %d Hz ed è stato portato alla stessa frequenza del segnale audio esterno (%d Hz).', fs_video, fs_audio)
     fs_video = fs_audio;
     sVideo_length = length(segnaleVideo);
 end
@@ -25,9 +34,14 @@ end
 %% 1. TUNING PARAMETRI
 
 blocco_minimo_secondi = 10;     %durata in secondi del blocco per la cross corelazione generica
-frame_silenzi_secondi = 5;      %durata in secondi del blocco per la cross corelazione di rimozione dei silenzi
+frame_estranei_secondi = 5;     %durata in secondi del blocco per la cross corelazione di rimozione dei silenzi
 ratio = 50;                     %rapporto tra la durata del file di partenza e la durata della finestra di correlazione. es: 50:1
 
+%eventuale rimozione fine di pezzi estranei
+flag = true;                    %viene fatta solo se il flag è true, altrimenti si basa solo su cross correlazione
+fps_video = 25;                 %frame al secondo del video in cui si vuole inserire l'audio
+factor = 10;                    %es:100 aumenta di 10 volte i tentativi (+ precisione = + lento) di matching per la rimozione del pezzo estraneo
+                                %non scendere sotto il valore 10, altrimenti mettere il flag a false
 
 %cross correlazione iniziale su numero di campioni pari alla differenza di
 %durata dei segnali o almeno blocco_minimo_secondi
@@ -71,7 +85,6 @@ if (campioniRitardo<0)
 end 
 sAudioTagliato_length=length(segnaleAudioTagliato); 
 campioniRitardoIniziale = campioniRitardo;
-
 
 
 %% 3. ALLINEAMENTO BLOCCO PER BLOCCO CONTRO DERIVA
@@ -131,7 +144,7 @@ end
 %Plot di tutti i disallineamenti causati dalla deriva e dai silenzi
 figure
 plot(1:length(ritardi), ritardi);
-title('Deriva')
+title('Deriva dei blocchi')
  
 [Max, MaxIndex] = max(differenze); % trovo il blocco in cui è stato inserito il "pezzo estraneo"
 %Plot delle differenze nei disallineamenti successivi  per trovare i pezzi estranei
@@ -143,21 +156,41 @@ title('Blocchi con pezzi estranei')
 sAudioSenzaDeriva_length = length(segnaleAudioSenzaDeriva);
 
 
+
 %% 4. ALLINEAMENTO CORRETTO BLOCCHI CON PEZZO ESTRANEO
 
 segnaleAudioSenzaPezziEstranei = segnaleAudioSenzaDeriva;
-pezzi = zeros(2,1);
+pezzi = zeros(3,1);
+tagli = zeros(2,1);
+
+%pezziTolti = zeros(2,1);
 
 [MaxD, MaxIndexD] = max(differenze);
-soglia = MaxD / 10;
+soglia = max(fs_audio,MaxD)/10;
+iter = 1;
 
 for i=1:1:length(differenze)
     
     %se trovo un blocco con una differenza tra ritardi successivi superiore
     %alla soglia, probabilmente contiene un pezzo estraneo da correggere
+    
     if (differenze(1, i) > soglia)
-        sprintf('Il blocco %d contiene un pezzo estraneo. Viene chiamata su questo blocco la funzione per i pezzi estranei.', i)   
-        [segnaleAudioSenzaPezziEstranei, pezzi] = pezziEstranei(frame_campioni, MaxIndex, frame_silenzi_secondi, fs_audio, segnaleVideo, segnaleAudioTagliato, segnaleAudioSenzaPezziEstranei, pezzi);
+        sprintf('Il blocco %d contiene un pezzo estraneo. Viene chiamata su questo blocco la funzione per i pezzi estranei.', i) 
+        iter = iter + 1;
+        
+        %rimozione fine solo se il flag è su true
+        if ( flag == true)
+            %individuazione pezzo estraneo
+            [pezzi] = pezziEstranei(frame_campioni, MaxIndex, frame_estranei_secondi, fs_audio, segnaleVideo, segnaleAudioTagliato, pezzi);
+         
+            %rimozione pezzo estraneo da traccia originale
+            [segnaleAudioTagliato, tagli] = rimozionePezziEstranei(iter, fps_video, fs_audio, segnaleVideo, segnaleAudioTagliato, pezzi, tagli, factor);
+        end
+        
+        %allineamento dopo rimozione pezzi estranei
+        [segnaleAudioSenzaPezziEstranei] = allineamentoSenzaPezziEstranei(frame_campioni, MaxIndex, frame_estranei_secondi, fs_audio, segnaleVideo, segnaleAudioTagliato, segnaleAudioSenzaPezziEstranei);
+        
+        
     end
 end
 
@@ -168,18 +201,26 @@ sAudioSenzaPezziEstranei_length = length(segnaleAudioSenzaPezziEstranei);
 
 %info sul disallineamento iniziale
 if (campioniRitardoIniziale>=0)
-        sprintf('Inizialmente la seconda traccia partiva con un ritardo di %d campioni, cioè %d secondi.', campioniRitardoIniziale, round(abs(campioniRitardoIniziale)/fs_audio))
+        sprintf('Inizialmente la seconda traccia partiva con un ritardo di %d campioni, cioè circa %d secondi', campioniRitardoIniziale, round(abs(campioniRitardoIniziale)/fs_audio))
 end
 if (campioniRitardoIniziale<0)
-        sprintf('Inizialmente la seconda traccia partiva con un anticipo di %d campioni, cioè %d secondi.', abs(campioniRitardoIniziale), round(abs(campioniRitardoIniziale)/fs_audio))
+        sprintf('Inizialmente la seconda traccia partiva con un anticipo di %d campioni, cioè circa %d secondi', abs(campioniRitardoIniziale), round(abs(campioniRitardoIniziale)/fs_audio))
 end 
 
-
 %info su pezzi estranei
-if (length(pezzi) > 1)
-    for i=2:1:length(pezzi)
-    	sprintf('Un pezzo estraneo si trovava tra il secondo %d e il secondo %d.', pezzi(1,i)/fs_audio, pezzi(2,i)/fs_audio)
-    end
+S = size(pezzi);
+if (S(1,2) > 1)
+    for i=2:1:S(1,2)
+        inizio = (pezzi(1,i)+tagli(1,i))/fs_audio;
+        fine = (pezzi(1,i)+tagli(2,i))/fs_audio;
+        durata = tagli(2,i) - tagli(1,i);
+        hms_i = fix(mod(inizio, [0, 3600, 60]) ./ [3600, 60, 1]);
+        hms_o = fix(mod(fine, [0, 3600, 60]) ./ [3600, 60, 1]);
+        sprintf('Un pezzo estraneo di durata probabile %.02f sec si trovava tra %02d:%02d:%02d e %02d:%02d:%02d', durata/fs_audio, hms_i(1,1), hms_i(1,2), hms_i(1,3), hms_o(1,1), hms_o(1,2), hms_o(1,3))
+	end
+end
+if (S(1,2) == 1)
+    	sprintf('Non sono stati rilevati pezzi estranei nel segnale audio esterno.')
 end
 
 
@@ -187,7 +228,7 @@ end
 [MaxDifferenze, MaxIndexDifferenze] = max(differenze);
 campioniDeriva = sum(differenze);
 campioniDeriva = campioniDeriva - MaxDifferenze;
-sprintf('La deriva causa un ritardo totale di %d campioni, cioè circa %d millisecondi (su un file di circa %d minuti).', campioniDeriva, round(campioniDeriva/fs_audio*1000), round(sAudioSenzaDeriva_length/fs_audio/60))
+sprintf('La deriva causava un ritardo totale di %d campioni, cioè circa %d millisecondi (su un file di circa %d minuti)', campioniDeriva, round(campioniDeriva/fs_audio*1000), round(sAudioSenzaDeriva_length/fs_audio/60))
 
 
 %% 6. SCRITTURA FILE OUTPUT
@@ -195,4 +236,4 @@ sprintf('La deriva causa un ritardo totale di %d campioni, cioè circa %d millise
 %normalizzo guadagno del file prima di salvarlo
 audio_output = segnaleAudioSenzaPezziEstranei / max(abs(segnaleAudioSenzaPezziEstranei));
 
-audiowrite('AudioAligned.wav', audio_output, fs_audio);
+audiowrite('audioAligned-song.wav', audio_output, fs_audio);
