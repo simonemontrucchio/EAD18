@@ -47,7 +47,7 @@ ans = 'La deriva causava un ritardo totale di 94 campioni, cioè circa 2 millise
 
 ## Test
 
-Per testare il funzionamento del codice, seguire la procedura di installazione presentata al punto 2), eventualmente modificando la variabile `esempi` presente all’inizio del file _alignment.m_
+Per testare il funzionamento del codice, seguire la procedura di installazione presentata nella [Procedura di installazione](https://github.com/simonemontrucchio/EAD18/blob/master/README.md#procedura-di-installazione), eventualmente modificando la variabile `esempi` presente all’inizio del file _alignment.m_
 *	`esempi == 1` utilizzerà le tracce audio di esempio (di circa 1 ora) fornite in aula, già estratte dal file video, che sono disponibili [QUI](https://drive.google.com/open?id=1Nxh1MmflR_YBGZzhxb7OEsWoLk-XBmhD)
 *	`esempi == 2` utilizzerà delle tracce audio di esempio (di circa 5 minuti) realizzate a parte, scaricabili da questo stesso repository di Github (_audioInterno44.wav_ e _audioEsterno48s.wav_)
 
