@@ -1,5 +1,5 @@
 # Clip Alignment
-Progetto realizzato per il corso di Elaborazione dell'audio digitale del [Politecnico di Torino](https://www.polito.it) tenuto dal professor Antonio Servetti.
+Progetto realizzato per il corso di Elaborazione dell'Audio Digitale del [Politecnico di Torino](https://www.polito.it) tenuto dal professor Antonio Servetti.
 
 
 ## Descrizione
