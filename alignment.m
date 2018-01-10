@@ -2,7 +2,7 @@ clear all; close all;
 
 %% 0. APERTURA DEI FILE AUDIO
 
-esempi = 2;     %mettere su 1 per usare i file di esempio forniti dal professore, su 2 per usare i file di esempio da noi generati
+esempi = 1;     %mettere su 1 per usare i file di esempio forniti dal professore, su 2 per usare i file di esempio da noi generati
 
 if (esempi == 1)
     [segnaleAudio, fs_audio] =audioread('audioEsterno.wav');    % apertura file audio ESTERNO
