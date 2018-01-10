@@ -1,7 +1,8 @@
-Clip Alignment
-=========
+# Clip Alignment
+Progetto realizzato per il corso di Elaborazione dell'audio digitale del [Politecnico di Torino](https://www.polito.it) tenuto dal professor Antonio Servetti.
 
-# Descrizione
+
+## Descrizione
 
 Il codice implementato in linguaggio Matlab (R2017b) ha lo scopo di allineare due tracce audio:
 * Audio Interno (cioè la traccia incorporata alla traccia video)
@@ -35,7 +36,7 @@ ans = 'La deriva causava un ritardo totale di 94 campioni, cioè circa 2 millise
  
 ```
 
-# Procedura di installazione
+## Procedura di installazione
 
 1. scaricare i 4 file *.m
 2. aprire il file _alignment.m_ in Matlab 
@@ -44,13 +45,13 @@ ans = 'La deriva causava un ritardo totale di 94 campioni, cioè circa 2 millise
 5. La traccia audio allineata ottenuta in output deve essere sostituita a quella integrata nel video a parte dall’utente (utilizzando un software a piacere, ad esempio FFmpeg https://www.ffmpeg.org/)
 
 
-# Test
+## Test
 
 Per testare il funzionamento del codice, seguire la procedura di installazione presentata al punto 2), eventualmente modificando la variabile `esempi` presente all’inizio del file _alignment.m_
-*	`esempi == 1` utilizzerà le tracce audio di esempio (di circa 1 ora) fornite dal Prof. Servetti nel corso di Elaborazione dell’audio digitale del Politecnico di Torino, già estratte dal file video, che sono disponibili [QUI](https://drive.google.com/open?id=1Nxh1MmflR_YBGZzhxb7OEsWoLk-XBmhD)
+*	`esempi == 1` utilizzerà le tracce audio di esempio (di circa 1 ora) fornite in aula, già estratte dal file video, che sono disponibili [QUI](https://drive.google.com/open?id=1Nxh1MmflR_YBGZzhxb7OEsWoLk-XBmhD)
 *	`esempi == 2` utilizzerà delle tracce audio di esempio (di circa 5 minuti) realizzate a parte, scaricabili in questo stesso repository di Github (_audioInterno44.wav_ e _audioEsterno48s.wav_)
 
-# Contributors
+## Contributors
 [Selene Di Viesti](https://github.com/SeleneDiViesti)
 
 [Simone Montrucchio](https://github.com/simonemontrucchio)
