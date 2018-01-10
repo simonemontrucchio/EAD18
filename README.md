@@ -15,7 +15,7 @@ I problemi che il codice risolve sono di tre tipi:
 
 Il codice restituisce in output:
 * la traccia audio esterna, allineata correttamente rispetto a quella interna
-* alcune informazioni sull’operazione eseguita (disallineamento iniziale, eventuali “pezzi estranei” e loro posizione e durata probabile, disallineamento di deriva)
+* alcune informazioni sull’operazione eseguita (eventuale ricampionamento della traccia audio interna nel caso in cui la frequenza fosse diversa da quella della traccia registrata esternamente, disallineamento iniziale, eventuali “pezzi estranei” e loro posizione e durata probabile, disallineamento di deriva)
 
 #### Esempio informazioni di output
 
